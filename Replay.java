@@ -1,3 +1,8 @@
+/**
+ *
+ * @author Aaron Elligsen
+ * 
+ */
 package FAChart;
 
 import java.util.Hashtable;

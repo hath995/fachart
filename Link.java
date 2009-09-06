@@ -1,6 +1,9 @@
+/**
+ *
+ * @author Aaron Elligsen
+ * 
+ */
 package FAChart;
-
-/*Aaron Elligsen*/
 
 public class Link
 {

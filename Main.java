@@ -1,6 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ *
+ * @author Aaron Elligsen
+ * 
  */
 
 package FAChart;
@@ -29,7 +30,11 @@ import java.awt.Dimension;
 public class Main {
 
     /**
-     * @param args the command line arguments
+     * Main method which creates the base frame for the Analyzer. Replays can be 
+     * opened from this frame as well as a global close. It provides version info too
+     *.
+     * @param args the command line arguments containing nothing or full path to 
+     * one or several replays
      */
     public static void main(String[] args) {
         try
@@ -124,6 +129,11 @@ public class Main {
 
     }
     
+    /**
+     * Replaces any spaces in path names with *
+     * @param String Full replay path
+     * @return escaped path string
+     */
     static public String unEscapeSpaceString(String fp){
     	StringBuffer theFP = new StringBuffer(fp);
     	while(theFP.lastIndexOf("*")!=-1)

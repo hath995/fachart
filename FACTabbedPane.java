@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package FAChart;
 
 import java.awt.Color;
@@ -43,9 +38,7 @@ import org.jfree.data.category.CategoryDataset;
 /**
  *
  * @author Aaron Elligsen
- * Things left to do before version 1 release:
  * 
- * About Page?
  */
 public class FACTabbedPane extends JTabbedPane implements ActionListener{
 
