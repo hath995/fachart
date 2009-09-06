@@ -1,3 +1,9 @@
+/**
+ *
+ * @author Aaron Elligsen
+ * 
+ */
+
 package FAChart;
 
 
