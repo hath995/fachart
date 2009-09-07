@@ -8,6 +8,11 @@ package FAChart;
 import java.util.Hashtable;
 import java.util.Vector;
 
+/**
+ * The Replay class holds pretty much all the information that is useful when 
+ * describing a replay. Half of the data members are filled by the Header class
+ * and the other half are filled by the ReplayRead.Analyze function
+ */
 public class Replay
 {
 	public String ReplayPatchFileId;
