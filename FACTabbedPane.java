@@ -44,6 +44,13 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
 
     JEditorPane bolist;
     
+    /**
+     * This constructor creates the tabbed pane which will contain the analysis
+     *
+     * @param pwd Takes the replay as a File
+     * @param parent Takes the reference to the parent frame so exit behavior is 
+     * correct.
+     */
     public FACTabbedPane(File pwd, JFrame parent)
     {
         Replay theReplay = ReplayReader.Analyze(pwd, parent);
@@ -74,6 +81,12 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         return mapInfo;
     }
     
+    /**
+     * This creates the panel for build orders.
+     *
+     * @param theReplay Takes the replay as a Replay, my container class for data
+     * @return JComponent panel with editor pane listing build orders
+     */
     public JComponent BOchart(Replay theReplay)
     {
         JPanel boPanel = new JPanel();
@@ -105,6 +118,12 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         return editorScrollPane;
     }
     
+    /**
+     * ACTIONchart is a function which creates the panel for the action distributions
+     *
+     * @param theReplay Takes the replay as a Replay, my container class for data
+     * @return JComponent panel with graphs of actions distributions
+     */
     public JComponent ACTIONchart(Replay theReplay)
     {
         /*
@@ -293,6 +312,11 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         return actionScrollPane;
     }
     
+    /**
+     * This function is unused. It was a prototype for the action distribution charrt
+     * 
+     */
+    
     private JFreeChart createChart(final CategoryDataset dataset) {
 
         final CategoryAxis categoryAxis = new CategoryAxis("Action");
@@ -333,13 +357,19 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         
     }
     
+    /**
+     * This produces the chart with the Micro versus macro chart. Macro being
+     * ecnomically focused action and micro being strategically focused actions
+     *
+     * @param theReplay Takes the replay as a Replay, my container class for data
+     * @return JComponent panel containg graphs of micro and macro for all players
+     */
     public JComponent MACROchart(Replay theReplay)
     {
         XYSeries[][] series = new XYSeries[(int)theReplay.NumSources][2];
         XYSeriesCollection[] dataset = new XYSeriesCollection[(int)theReplay.NumSources];
         for(int i = 0; i < theReplay.NumSources; i++)
         {
-            //System.out.println(theReplay.MicroAPM[i].size());
             series[i][0] = new XYSeries("Total CPM");
             series[i][1] = new XYSeries("Micro");
             for(int j = 0; j < theReplay.MicroAPM[i].size(); j++)
@@ -348,20 +378,15 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
                 series[i][1].add(
                         ((Point)theReplay.MicroAPM[i].get(j)).x,
                         ((Point)theReplay.MicroAPM[i].get(j)).y);
-               // System.out.print(((Point)theReplay.MicroAPM[i].get(j)).x +" ");
             }
-            //System.out.println("macro");
             for(int j = 0; j < theReplay.APMS[i].size(); j++)
             {
                 series[i][0].add(((Point)theReplay.APMS[i].get(j)).x,((Point)theReplay.APMS[i].get(j)).y);
-                //System.out.print(((Point)theReplay.APMS[i].get(j)).x +" ");
             }
             dataset[i] = new XYSeriesCollection();
             dataset[i].addSeries(series[i][0]);
             dataset[i].addSeries(series[i][1]);
             
-        //XYSeries series = new XYSeries("60F_Sifnoc");
-        //XYSeries series2 = new XYSeries("Hath995");
         }
         
         
@@ -389,6 +414,12 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         return macroScrollPane;
     }
     
+    /**
+     * This creates the commands per minute chart. This is just raw actions.
+     *
+     * @param theReplay Takes the replay as a Replay, my container class for data
+     * @return JComponent panel showing the CPM for every player
+     */
     public JComponent CPMchart(Replay theReplay)
     {
         XYSeries[] series = new XYSeries[(int)theReplay.NumSources];
@@ -438,6 +469,12 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         
     }
     
+    /**
+     * This is the action listener for the build order tab. User cans save the 
+     * builder orders as text files if they like. 
+     *
+     * @param ActionEvent Takes an ActionEvent like a button click!
+     */
     public void actionPerformed(ActionEvent e) {
         JFileChooser fc = new JFileChooser();
          //fc.setMultiSelectionEnabled(true);

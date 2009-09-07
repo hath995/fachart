@@ -33,7 +33,7 @@ public class Header
 	 */
 	public static String returnNextString(FileInputStream areplay) throws IOException
 	{
-		byte [] inputWord = new byte[1];
+		byte [] inputWord = new byte[ONEBYTE];
 		areplay.read(inputWord);
 		String current_option = "";
 		while(inputWord[0] != 0)
@@ -89,7 +89,7 @@ public class Header
 		{	
 		case 0: //LUA_TYPE_NUMBER
 			Long  number = new Long(ReplayReader.unsignedInt(input, index, 4));
-			index +=4;
+			index +=FOURBYTES;
 			result = number;
 			//System.out.println("number");
 			break;
@@ -152,7 +152,7 @@ public class Header
 	 */
 	static String setReplayPatchFileId(FileInputStream thereplay) throws IOException
 	{
-		byte [] inputWord = new byte[1];
+		byte [] inputWord = new byte[ONEBYTE];
 		String replayFilePatchId = Header.returnNextString(thereplay);
 		thereplay.skip(3);
 		return replayFilePatchId;
@@ -169,7 +169,7 @@ public class Header
 	static String setReplayVersionId(FileInputStream thereplay) throws IOException
 	{
 		String replayVersionId = Header.returnNextString(thereplay);
-		thereplay.skip(4);
+		thereplay.skip(FOURBYTES);
 		return replayVersionId;
 	}
 	
@@ -184,9 +184,9 @@ public class Header
 	 */
 	static long setGameModsSize(FileInputStream thereplay) throws IOException
 	{
-		byte[] inputWord = new byte[4];
+		byte[] inputWord = new byte[FOURBYTES];
 		thereplay.read(inputWord);
-		long gameModsSize = ReplayReader.unsignedInt(inputWord,0,4);
+		long gameModsSize = ReplayReader.unsignedInt(inputWord,0,FOURBYTES);
 		return gameModsSize;
 	}
 	
@@ -219,9 +219,9 @@ public class Header
 	 */
 	static long setLuaScenarioInfoSize(FileInputStream thereplay) throws IOException
 	{
-		byte[] inputWord = new byte[4];
+		byte[] inputWord = new byte[FOURBYTES];
 		thereplay.read(inputWord);
-		long LSIS = ReplayReader.unsignedInt(inputWord,0,4);
+		long LSIS = ReplayReader.unsignedInt(inputWord,0,FOURBYTES);
 		return LSIS;
 	}
 	
@@ -255,9 +255,9 @@ public class Header
 	 */
 	static long setNumSources(FileInputStream thereplay) throws IOException
 	{
-		byte[] inputWord = new byte[1];
+		byte[] inputWord = new byte[ONEBYTE];
 		thereplay.read(inputWord);
-		long numSources = ReplayReader.unsignedInt(inputWord,0,1);
+		long numSources = ReplayReader.unsignedInt(inputWord,0,ONEBYTE);
 		return numSources;
 	}
 	
@@ -274,13 +274,13 @@ public class Header
 	static String[][] setCommandSource(long numSources, FileInputStream thereplay) throws IOException
 	{
 		String [][] players = new String[(int)numSources][2];
-		byte[] inputWord = new byte[4];
+		byte[] inputWord = new byte[FOURBYTES];
 		
 		for(int i = 0; i < numSources; i++)
 		{
 			players[i][0] = Header.returnNextString(thereplay);
 			thereplay.read(inputWord);
-			players[i][1] = String.valueOf(ReplayReader.unsignedInt(inputWord,0,4));
+			players[i][1] = String.valueOf(ReplayReader.unsignedInt(inputWord,0,FOURBYTES));
 		}
 		return players;
 	}
@@ -296,9 +296,9 @@ public class Header
 	 */
 	static long setCheatsEnabled(FileInputStream thereplay) throws IOException
 	{
-		byte[] inputWord = new byte[1];
+		byte[] inputWord = new byte[ONEBYTE];
 		thereplay.read(inputWord);
-		long cheats = ReplayReader.unsignedInt(inputWord,0,1);
+		long cheats = ReplayReader.unsignedInt(inputWord,0,ONEBYTE);
 		return cheats;
 	}
 	
@@ -314,9 +314,9 @@ public class Header
 	 */
 	static long setNumArmies(FileInputStream thereplay) throws IOException
 	{
-		byte[] inputWord = new byte[1];
+		byte[] inputWord = new byte[ONEBYTE];
 		thereplay.read(inputWord);
-		long NumArmies = ReplayReader.unsignedInt(inputWord,0,1);
+		long NumArmies = ReplayReader.unsignedInt(inputWord,0,ONEBYTE);
 		return NumArmies;
 	}
 	
@@ -337,17 +337,17 @@ public class Header
 		byte[] inputWord;
 		for(int i = 0; i < numArmies; i++)
 		{
-			inputWord = new byte[4];
+			inputWord = new byte[FOURBYTES];
 			thereplay.read(inputWord);
-			long playerDataSize = ReplayReader.unsignedInt(inputWord,0,4);
+			long playerDataSize = ReplayReader.unsignedInt(inputWord,0,FOURBYTES);
 			inputWord = new byte[(int)playerDataSize];
 			thereplay.read(inputWord);
 			index=0;
 			player[i] = (Hashtable)Header.parseLuaTable(inputWord);
                         Header.index = 0;
-			inputWord = new byte[1];
+			inputWord = new byte[ONEBYTE];
 			thereplay.read(inputWord);
-			long playerCommandSource = ReplayReader.unsignedInt(inputWord,0,1);
+			long playerCommandSource = ReplayReader.unsignedInt(inputWord,0,ONEBYTE);
 			player[i].put("CommandSource", playerCommandSource);
 			if(playerCommandSource != 0xff)
 				thereplay.read(inputWord);//skips FF
@@ -367,9 +367,9 @@ public class Header
 	 */
 	static long setRandomSeed(FileInputStream thereplay) throws IOException
 	{
-		byte[] inputWord = new byte[4];
+		byte[] inputWord = new byte[FOURBYTES];
 		thereplay.read(inputWord);
-		long randomSeed = ReplayReader.unsignedInt(inputWord,0,4);
+		long randomSeed = ReplayReader.unsignedInt(inputWord,0,FOURBYTES);
 		return randomSeed;
 	}
 

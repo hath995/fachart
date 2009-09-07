@@ -24,8 +24,17 @@ import javax.swing.UIManager;
 import java.awt.Dimension;
 
 /**
+ * This program is a replay analyzer for Supreme Commander: Forged Alliance.
+ * It provides quantitative data on how players performed by measuring things like
+ * commands per minute (multitasking speed), micro/macro (economic versus strategic focus),
+ * build orders and so on. It is a tool for competitive players looking to better
+ * improve their skills. 
  *
- * @author admin
+ * It was written using the Java Swing library and the open source graphing library JFreeChart.
+ * JFreeChart is licensed under the terms of the GNU Lesser General
+ * Public Licence (LGPL).  A copy of the licence is included in the
+ * distribution. 
+ * http://www.jfree.org/jfreechart/
  */
 public class Main {
 

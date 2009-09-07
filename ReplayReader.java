@@ -19,15 +19,24 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 /*release features *CPM/
-		MacroMicroCPM/
+		*MacroMicroCPM/
 		*BuildOrder by time
 		BuildOrder by engineer
 		*CPM order type distribution
-		*unit distribution?
+		unit distribution?
 */
 public class ReplayReader
 {
-	
+	/**
+	 * As Java does not support unsigned integers it was necessary to create
+	 * a function to convert the bytes Java read in.
+	 *
+	 * @param words The java io for acessing raw bits returns in byte arrays
+	 * @param index This index is where an integer should start if dealing 
+	 * with large arrays of various data.
+	 * @param numBytes The number of 8 bit bytes to restore the integer (1, 2, and 4 are most common)
+	 * @return long int containing an unsigned int
+	 */
 	public static long unsignedInt(byte []  words, int index, int numBytes) //converts little endian unsigned int to int
 	{
 		long value = 0; 
@@ -43,6 +52,17 @@ public class ReplayReader
 		return value;
 	}
 	
+	/**
+	 * Unfortunately, the running game time is not stored in the header. It
+	 * isn't stored as a single value anywhere. The command stream documents
+	 * time with ticks and every tick is 1/10 of a second. It records them all
+	 * game long you need to count all of them to determine the game time.
+	 * This means going through the command stream a second time to determine it.
+	 *
+	 * @param thereplay Takes the replay as a FileInputStream
+	 * @return The number of ticks counted. Apply a conversion of ticks/10/60 to get game time in minutes
+	 * @throws IOException
+	 */
 	public static long setGameTime(FileInputStream thereplay) throws IOException
 	{
 		byte[] inputWord = new byte[1];
@@ -67,12 +87,30 @@ public class ReplayReader
 	}
 	
 
+	/**
+	 * Analyze is the meat and potatoes of this program. It started out as a
+	 * very procedural function. I have begun breaking it apart and making it
+	 * more class oriented. However, the analysis portion of the program
+	 * is best handled by a rather large switch statement. Mining the data as
+	 * the replay is read is more efficient than separate passes for different data
+	 *
+	 * Please keep in mind THIS IS A BEST GUESS at understanding a file format
+	 * produced by a company who has not releaased said format's full description.
+	 * Right now it is full of magic numbers and things done just because it 
+	 * gets the data out correctly. 
+	 *
+	 * @param aReplay Takes the replay as a File
+	 * @param parent The analyze function may need to pass message back to 
+	 * the parent frame in case of errors/exceptions
+	 */
 	public static Replay Analyze(File aReplay, JFrame parent)
 	{
 		
 		Replay replayData = new Replay();
 		Scanner scan;
 		FileInputStream thereplay=null;
+		
+		///Initializing resource for Build orders
 		Hashtable<String, String> unitTable=null;
 		try{
 			unitTable = new Hashtable<String, String>();
@@ -84,8 +122,6 @@ public class ReplayReader
 				unitTable.put(scan.next(),scan.nextLine());
 			}
 			
-			
-			
 		}catch(FileNotFoundException e) {
 			JDialog unitDb = new JDialog(parent, "Congfig file missing", true);
 			unitDb.setPreferredSize(new Dimension(100,50));
@@ -95,8 +131,7 @@ public class ReplayReader
 			unitDb.pack();
 			unitDb.setVisible(true);
 		}catch(IOException e) {
-			
-			
+			System.err.println("IOException caught when reading unitDB");
 		}
 		
 		try{
@@ -111,9 +146,9 @@ public class ReplayReader
 			noFile.setVisible(true);
 			
 		}
-                        //System.out.println("Or here?");
+
 			//PrintWriter theoutput = new PrintWriter("output.txt");
-			//String thename = args[0].substring(0,args[0].indexOf('.'));
+
 			byte [] inputWord = new byte[1];
 			
 			
@@ -132,9 +167,10 @@ public class ReplayReader
 			replayData.Armies = Header.setArmies(replayData.NumArmies, thereplay);
 			replayData.RandomSeed = Header.setRandomSeed(thereplay);
 			}catch(IOException a){
-				
+				System.err.println("IOException caught when reading header");
 			}
 			
+			////////////////Setting Game Length
 			FileChannel myChannel = thereplay.getChannel();
 			Long endOfHeaderPos = new Long(0);
 			try{
@@ -142,10 +178,12 @@ public class ReplayReader
 				replayData.GameTime = ReplayReader.setGameTime(thereplay);
 				myChannel.position(endOfHeaderPos);
 			}catch(IOException a){
-				
+				System.err.println("IOException during Game Length determination");
 			}
-			//theoutput.println("GT: "+replayData.GameTime);
-			/////////////////
+
+			
+			/////////////////Initializing variables for data analysis
+			
 			//PrintWriter BOoutput = new PrintWriter(thename+".bo");
 			inputWord = new byte[1];
 			long tick = 0;
@@ -182,6 +220,8 @@ public class ReplayReader
 				buildorder.add(new Link(replayData.CommandSource[i][0]+"'s build order\n", i, 0,Long.MAX_VALUE,null));
 			}
 			
+			
+			//////////////////Begin reading through the command stream
 			try{ 
 			while(thereplay.read(inputWord) != -1)
 			{
@@ -205,7 +245,7 @@ public class ReplayReader
                                 int pointSampleIntervalTicks = 30;
                                 
                                 
-				if(tick >= (600-(cpmTimeIntervalTicks/2)) && lastTick != tick) 
+				if(tick >= (600-(cpmTimeIntervalTicks/2)) && lastTick != tick) //don't begin calculating APM until 1 minute or 600 ticks
 				{
 					for(int i = 0; i <replayData.NumSources; i++)
 					{
@@ -235,24 +275,7 @@ public class ReplayReader
 				}
                                 
                                 
-				/*if(tick%cpmTimeIntervalTicks==0 && lastTick != tick && tick != 0)
-				{
-					for(int i = 0; i <replayData.NumSources; i++)
-					{
-						if(actions[i] != 0)
-						{
-						int deltaActions = actions[i]-difActions[i];
-						Point apm = new Point(tick, deltaActions*cpmMultiplier);
-						APMS[i].add(apm);
-						int microDeltaActions = microActions[i]-microDifActions[i];
-						Point mapm = new Point(tick, microDeltaActions*cpmMultiplier);
-						MAPMS[i].add(mapm);
-						}
-						difActions[i] = actions[i];
-						microDifActions[i] = microActions[i];
-					}
-					lastTick = tick;
-				}*/
+				
 				
 				
 				int typecode = (int)inputWord[0];
@@ -260,7 +283,7 @@ public class ReplayReader
 				try {
 				thereplay.read(inputWord);
 				}catch(IOException a){
-					
+					System.err.println("IOException while reading the typecode");
 				}
 				int message_length = (int)ReplayReader.unsignedInt(inputWord,0,2)-3;
 				inputWord = new byte[1];
@@ -272,11 +295,13 @@ public class ReplayReader
 					try{
 						thereplay.read(messageWord);
 					}catch(IOException a){
-						
+						System.err.println("IOException caught while reading in individual command data");
 					}
 				}else{
-					//theoutput.println("NIerror"); //negative index	
+					System.err.println("Negative index error: message length less than 0"); 
 				}
+				
+				///////Begin sorting through the command stream data by command type
 				switch(typecode)
 				{
 				case 0: /*theoutput.println("CMDST_Advance");*/ tick++; break;
@@ -302,7 +327,7 @@ public class ReplayReader
 					}
 					 playerLastTurn[playerturn]=tick;
 					int numUnits = (int)ReplayReader.unsignedInt(messageWord, 0, 4);
-					int index=4;
+					int index=4; //Read the data and then move past it
 					long [] entIds = new long[numUnits];
 					for(int b = 0; b < numUnits; b++)
 					{
@@ -444,11 +469,10 @@ public class ReplayReader
 				
 			}
 			}catch(IOException a){
-				
+				System.err.println("IOException caught during command stream command analysis");
 			}
 			
 			float []gametime = new float[(int)replayData.NumSources];
-			//theoutput.println("Game tick count: " + tick);
 			for(int i = 0; i < replayData.NumSources; i++) 
 			{
 				if(playerLastTurn[i] > 0)
@@ -497,9 +521,6 @@ public class ReplayReader
 				}
 			}*/
 
-			//theoutput.println("");
-			//buildorder.writeBO(BOoutput);
-			//BOoutput.close();
             try{            
             	thereplay.close();
             }catch(IOException e) {
