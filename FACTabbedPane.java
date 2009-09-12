@@ -10,24 +10,22 @@ import javax.swing.JTabbedPane;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.Hashtable;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.BorderFactory;
+import javax.swing.border.TitledBorder;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.category.LayeredBarRenderer;
 import org.jfree.chart.renderer.xy.XYDifferenceRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
@@ -51,12 +49,13 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
      * @param parent Takes the reference to the parent frame so exit behavior is 
      * correct.
      */
-    public FACTabbedPane(File pwd, JFrame parent)
+    public FACTabbedPane(byte[] pwd, Hashtable unitTable, int file_size)
     {
-        Replay theReplay = ReplayReader.Analyze(pwd, parent);
-        //JComponent generalInfo = genInfo(theReplay);
-        //this.addTab("General Info", generalInfo);
-        //this.setMnemonicAt(0, KeyEvent.VK_1);
+        ReplayReader theAnalyzer = new ReplayReader(pwd,file_size);
+        Replay theReplay = theAnalyzer.Analyze(pwd, unitTable);
+        JComponent generalInfo = genInfo(theReplay);
+        this.addTab("General Info", generalInfo);
+        this.setMnemonicAt(0, KeyEvent.VK_1);
         JComponent cpmPanel = CPMchart(theReplay);
         this.addTab("CPM", cpmPanel);
         this.setMnemonicAt(0, KeyEvent.VK_1);
@@ -75,10 +74,14 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
     
     public JComponent genInfo(Replay theReplay)
     {
-        JPanel mapInfo = new JPanel();
-        JLabel map = new JLabel("Map:");
+        JPanel replayInfo = new JPanel();
         
-        return mapInfo;
+        JPanel mapSettings = new JPanel();
+        TitledBorder titled = BorderFactory.createTitledBorder("Map Info:");
+
+
+        
+        return replayInfo;
     }
     
     /**
@@ -126,47 +129,6 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
      */
     public JComponent ACTIONchart(Replay theReplay)
     {
-        /*
-        0 UNITCOMMAND_None 
-        1 UNITCOMMAND_Stop micro
-        2 UNITCOMMAND_Move micro
-        3 UNITCOMMAND_Dive micro
-        4 UNITCOMMAND_FormMove micro
-        5 UNITCOMMAND_BuildSiloTactical macro
-        6 UNITCOMMAND_BuildSiloNuke macro
-        7 UNITCOMMAND_BuildFactory macro
-        8 UNITCOMMAND_BuildMobile macro
-        9 UNITCOMMAND_BuildAssist macro
-        10 UNITCOMMAND_Attack micro
-        11 UNITCOMMAND_FormAttack micro
-        12 UNITCOMMAND_Nuke micro
-        13 UNITCOMMAND_Tactical micro
-        14 UNITCOMMAND_Teleport micro
-        15 UNITCOMMAND_Guard 
-        16 UNITCOMMAND_Patrol 
-        17 UNITCOMMAND_Ferry micro
-        18 UNITCOMMAND_FormPatrol micro
-        19  UNITCOMMAND_Reclaim macro
-        20 UNITCOMMAND_Repair macro
-        21 UNITCOMMAND_Capture macro
-        22 UNITCOMMAND_TransportLoadUnits micro
-        23 UNITCOMMAND_TransportReverseLoadUnits micro
-        24 UNITCOMMAND_TransportUnloadUnits micro
-        25 UNITCOMMAND_TransportUnloadSpecificUnits micro
-        26 UNITCOMMAND_DetachFromTransport micro
-        27 UNITCOMMAND_Upgrade macro
-        28 UNITCOMMAND_Script macro
-        29 UNITCOMMAND_AssistCommander micro
-        30 UNITCOMMAND_KillSelf micro
-        31 UNITCOMMAND_DestroySelf micro
-        32 UNITCOMMAND_Sacrifice macro
-        33 UNITCOMMAND_Pause macro
-        34 UNITCOMMAND_OverCharge micro
-        35 UNITCOMMAND_AggressiveMove micro
-        36 UNITCOMMAND_FormAggressiveMove micro
-        37 UNITCOMMAND_AssistMove micro
-        38 UNITCOMMAND_SpecialAction macro
-        39 UNITCOMMAND_Dock micro*/
         
         String[] move = {"Move"};
         double[][] moveList = new double[(int)theReplay.NumSources][1];
@@ -312,50 +274,6 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         return actionScrollPane;
     }
     
-    /**
-     * This function is unused. It was a prototype for the action distribution charrt
-     * 
-     */
-    
-    private JFreeChart createChart(final CategoryDataset dataset) {
-
-        final CategoryAxis categoryAxis = new CategoryAxis("Action");
-        //categoryAxis.setMaxCategoryLabelWidthRatio(10.0f);
-        final ValueAxis valueAxis = new NumberAxis("#");
-
-
-        final CategoryPlot plot = new CategoryPlot(dataset,
-                                             categoryAxis,
-                                             valueAxis,
-                                             new LayeredBarRenderer());
-        
-        plot.setOrientation(PlotOrientation.HORIZONTAL);
-        final JFreeChart chart = new JFreeChart("Action Distrobution Chart",
-                                          JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-
-        // set the background color for the chart...
-        chart.setBackgroundPaint(Color.lightGray);
-
-        final LayeredBarRenderer renderer = (LayeredBarRenderer) plot.getRenderer();
-
-        // we can set each series bar width individually or let the renderer manage a standard view.
-        // the width is set in percentage, where 1.0 is the maximum (100%).
-        for(int i=0; i < dataset.getColumnCount(); i++)
-        {
-            double width = 1-0.1*i;
-            renderer.setSeriesBarWidth(i, width);
-        }
-        
-
-        renderer.setItemMargin(0.1);
-        final CategoryAxis domainAxis = plot.getDomainAxis();
-        domainAxis.setCategoryMargin(0.25);
-        domainAxis.setUpperMargin(0.05);
-        domainAxis.setLowerMargin(0.05);
-        
-        return chart;
-        
-    }
     
     /**
      * This produces the chart with the Micro versus macro chart. Macro being

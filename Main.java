@@ -10,6 +10,12 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Scanner;
+
 import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -57,6 +63,26 @@ public class Main {
         
         JFrame frame = new JFrame("FAchart");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        Scanner scan;
+        Hashtable<String, String> unitTable=null;
+		try{
+			unitTable = new Hashtable<String, String>();
+			scan = new Scanner(new File("unitDB.txt"));
+			while(scan.hasNext())
+			{
+				unitTable.put(scan.next(),scan.nextLine());
+			}	
+		}catch(FileNotFoundException e) {
+			JDialog unitDb = new JDialog(frame, "Congfig file missing", true);
+			unitDb.setPreferredSize(new Dimension(100,50));
+			unitDb.setResizable(false);
+			JLabel missing = new JLabel("unitDB.txt is missing.");
+			unitDb.getContentPane().add(missing);
+			unitDb.pack();
+			unitDb.setVisible(true);
+		}
+        
 
         JMenuBar menuBar;
         JMenu menu;
@@ -72,7 +98,7 @@ public class Main {
                 KeyEvent.VK_O, ActionEvent.CTRL_MASK));
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "Loads one or more replay");
-        menuItem.addActionListener(new loadListener(frame));
+        menuItem.addActionListener(new loadListener(frame, unitTable));
         menu.add(menuItem);
         menu.addSeparator();
         JMenuItem quitMenuItem = new JMenuItem("Quit FAChart",
@@ -89,7 +115,7 @@ public class Main {
         centralPane.setMaximumSize(new Dimension(400,100));
         JLabel version = new JLabel("Version 1.3");
         JLabel useage = new JLabel("To analyze replay(s) click on File->Open Replays (Ctrl+O for short). ");
-		JLabel author = new JLabel("Author: Hath995");
+		JLabel author = new JLabel("Author: Aaron Elligsen");
 		JLabel thing = new JLabel("\"Supreme Commander\" and \"Supreme Commander Forged Alliance\" are registered");
 		JLabel thing2 = new JLabel("trademarks of Gas Power Games Corp all rights reserved.");
         centralPane.add(version);
@@ -98,6 +124,8 @@ public class Main {
 		centralPane.add(thing);
 		centralPane.add(thing2);
         frame.getContentPane().add(centralPane);
+        
+        
         
        
         if(args.length > 0)
@@ -112,25 +140,50 @@ public class Main {
                 JDialog temp = new JDialog(frame,replayFiles[i].getName(),false);
 				temp.setPreferredSize(new Dimension(700,600));
 				temp.setMaximumSize(new Dimension(700,600));
-				try{
-					temp.getContentPane().add(new FACTabbedPane(replayFiles[i], frame));
-				}catch(NoClassDefFoundError e) {
-					JDialog noLibrary = new JDialog(frame, "Missing library", true);
-					noLibrary.setPreferredSize(new Dimension(150,50));
-					noLibrary.setResizable(false);
-					JLabel missing = new JLabel("Chart library is missing.");
-					noLibrary.getContentPane().add(missing);
-					noLibrary.pack();
-					noLibrary.setVisible(true);
+				FileInputStream thereplay=null;
+				try
+				{
+					thereplay = new FileInputStream(replayFiles[i]);
+					try
+					{
+						int fileSize = thereplay.available();
+						byte[] replaybytes = new byte[fileSize];
+						thereplay.read(replaybytes);
+					    try
+					    { 
+					    	temp.getContentPane().add(new FACTabbedPane(replaybytes,unitTable, fileSize));
+					    }catch(NoClassDefFoundError b) {
+					    	JDialog noLibrary = new JDialog(frame, "Missing library", true);
+					    	noLibrary.setPreferredSize(new Dimension(150,50));
+					    	noLibrary.setResizable(false);
+					    	JLabel missing = new JLabel("Chart library is missing.");
+					    	noLibrary.getContentPane().add(missing);
+					    	noLibrary.pack();
+					    	noLibrary.setVisible(true);
+					    }	
+					}catch(IOException t){
+						JDialog noData = new JDialog(frame, "Replay:"+replayFiles[i].getName()+" data inaccessible", true);
+						noData.setPreferredSize(new Dimension(150,50));
+						noData.setResizable(false);
+						JLabel missing = new JLabel("Replay data could not be read.");
+						noData.getContentPane().add(missing);
+						noData.pack();
+						noData.setVisible(true);
+					}
+				}catch(FileNotFoundException g) {
+					JDialog noFile = new JDialog(frame, "Replay:"+replayFiles[i].getName()+" not found.", true);
+					noFile.setPreferredSize(new Dimension(200,50));
+					noFile.setResizable(false);
+					JLabel missing = new JLabel("Replay:"+replayFiles[i].getName()+" is not found");
+					noFile.getContentPane().add(missing);
+					noFile.pack();
+					noFile.setVisible(true);
 				}
                 temp.pack();
                 temp.setVisible(true);
             }
         }
 
-
-        //JTabbedPane centralPane = new FACTabbedPane();
-        //frame.getContentPane().add(centralPane);
         frame.pack(); 
         frame.setVisible(true);
         
