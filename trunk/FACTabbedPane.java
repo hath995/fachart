@@ -19,8 +19,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.BorderFactory;
-import javax.swing.border.TitledBorder;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -49,13 +48,11 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
      * @param parent Takes the reference to the parent frame so exit behavior is 
      * correct.
      */
-    public FACTabbedPane(byte[] pwd, Hashtable unitTable, int file_size)
+    public FACTabbedPane(byte[] pwd, Hashtable<String, String> unitTable, int file_size)
     {
         ReplayReader theAnalyzer = new ReplayReader(pwd,file_size);
         Replay theReplay = theAnalyzer.Analyze(pwd, unitTable);
-        JComponent generalInfo = genInfo(theReplay);
-        this.addTab("General Info", generalInfo);
-        this.setMnemonicAt(0, KeyEvent.VK_1);
+        
         JComponent cpmPanel = CPMchart(theReplay);
         this.addTab("CPM", cpmPanel);
         this.setMnemonicAt(0, KeyEvent.VK_1);
@@ -72,17 +69,7 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         
     }
     
-    public JComponent genInfo(Replay theReplay)
-    {
-        JPanel replayInfo = new JPanel();
-        
-        JPanel mapSettings = new JPanel();
-        TitledBorder titled = BorderFactory.createTitledBorder("Map Info:");
-
-
-        
-        return replayInfo;
-    }
+    
     
     /**
      * This creates the panel for build orders.
@@ -290,16 +277,16 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         {
             series[i][0] = new XYSeries("Total CPM");
             series[i][1] = new XYSeries("Micro");
-            for(int j = 0; j < theReplay.MicroAPM[i].size(); j++)
+            for(int j = 0; j < theReplay.MicroAPM.get(i).size(); j++)
             {
                 
                 series[i][1].add(
-                        ((Point)theReplay.MicroAPM[i].get(j)).x,
-                        ((Point)theReplay.MicroAPM[i].get(j)).y);
+                        ((Point)theReplay.MicroAPM.get(i).get(j)).x,
+                        ((Point)theReplay.MicroAPM.get(i).get(j)).y);
             }
-            for(int j = 0; j < theReplay.APMS[i].size(); j++)
+            for(int j = 0; j < theReplay.APMS.get(i).size(); j++)
             {
-                series[i][0].add(((Point)theReplay.APMS[i].get(j)).x,((Point)theReplay.APMS[i].get(j)).y);
+                series[i][0].add(((Point)theReplay.APMS.get(i).get(j)).x,((Point)theReplay.APMS.get(i).get(j)).y);
             }
             dataset[i] = new XYSeriesCollection();
             dataset[i].addSeries(series[i][0]);
@@ -345,9 +332,9 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
         for(int i = 0; i < theReplay.NumSources; i++)
         {
             series[i] = new XYSeries(theReplay.CommandSource[i][0]);
-            for(int j = 0; j < theReplay.APMS[i].size(); j++)
+            for(int j = 0; j < theReplay.APMS.get(i).size(); j++)
             {
-                series[i].add(((Point)theReplay.APMS[i].get(j)).x,((Point)theReplay.APMS[i].get(j)).y);
+                series[i].add(((Point)theReplay.APMS.get(i).get(j)).x,((Point)theReplay.APMS.get(i).get(j)).y);
             }
             dataset.addSeries(series[i]);
         //XYSeries series = new XYSeries("60F_Sifnoc");
@@ -412,7 +399,7 @@ public class FACTabbedPane extends JTabbedPane implements ActionListener{
                     }
                         
                 }catch(FileNotFoundException a){
-                    
+                    System.err.println("Could not open file for writing Build order");
                 }
                 theSave.println(bolist.getText());
                 theSave.close();

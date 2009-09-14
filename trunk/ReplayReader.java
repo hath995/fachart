@@ -5,21 +5,8 @@
  */
 package FAChart;
 
-import java.awt.Dimension;
-import java.io.FileInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Scanner;
-import java.util.Vector;
-import java.nio.channels.FileChannel;
 
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 /*release features *CPM/
 		*MacroMicroCPM/
 		*BuildOrder by time
@@ -33,10 +20,6 @@ public class ReplayReader
 	byte[] thereplay;
 	int endOfFile;
 	
-	public final int ONEBYTE    = 1; //8 bits
-	public final int TWOBYTES   = 2; //16 bits
-	public final int THREEBYTES = 3; //24 bits
-	public final int FOURBYTES  = 4; //32 bits
 	
         
 	public ReplayReader(byte[] replaybytes, int file_length)
@@ -78,40 +61,30 @@ public class ReplayReader
 	 * very procedural function. I have begun breaking it apart and making it
 	 * more class oriented. However, the analysis portion of the program
 	 * is best handled by a rather large switch statement. Mining the data as
-	 * the 
+	 * the
 	 *
-	 * Please keep in mind THIS IS A BEST GUESS at understanding a file format
-	 * produced by a company who has not released said format's full description.
-	 * Right now it is full of magic numbers and things done just because it 
-	 * gets the data out correctly. 
-	 *
-	 * @param aReplay Takes the replay as a File
+	 * @param aReplay Takes the replay as a byte array
 	 * @param parent The analyze function may need to pass message back to 
 	 * the parent frame in case of errors/exceptions
 	 */
-	public Replay Analyze(byte[] thereplay, Hashtable unitTable)
+	public Replay Analyze(byte[] thereplay, Hashtable<String,String> unitTable)
 	{
 		
 		Replay replayData = new Replay(unitTable);
-	
-		///Initializing resource for Build orders
 
-			byte [] inputWord = new byte[1];
-			
-			
-			/////////////////Header
-			replayData.analyzeHeader(thereplay, endOfFile);
-			
-                        ////////////////Everything else
-			replayData.setGameTime(thereplay);
-                        replayData.setMicroAPM(thereplay);
-			
-                        replayData.setActionList(thereplay);
-                        replayData.setAPMS_actionTotal(thereplay);
-                        replayData.setBuildorder(thereplay);
-			
-			
-			return replayData;
+		/////////////////Header
+		replayData.analyzeHeader(thereplay, endOfFile);
+		
+		////////////////Everything else
+		replayData.setGameTime(thereplay);
+		replayData.setMicroAPM(thereplay);
+		
+		replayData.setActionList(thereplay);
+		replayData.setAPMS_actionTotal(thereplay);
+		replayData.setBuildorder(thereplay);
+		
+		
+		return replayData;
 		
 		
 	}

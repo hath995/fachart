@@ -6,7 +6,7 @@
 
 package FAChart;
 
-import java.awt.Dimension;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -23,7 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-//import javax.swing.JTabbedPane;
+
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
@@ -49,7 +49,7 @@ public class Main {
      * opened from this frame as well as a global close. It provides version info too
      *.
      * @param args the command line arguments containing nothing or full path to 
-     * one or several replays
+     * one or several replays with spaces escaped as '*'s
      */
     public static void main(String[] args) {
         try
@@ -81,6 +81,7 @@ public class Main {
 			unitDb.getContentPane().add(missing);
 			unitDb.pack();
 			unitDb.setVisible(true);
+			unitTable=null;
 		}
         
 
@@ -113,7 +114,7 @@ public class Main {
         centralPane.setLayout(new BoxLayout(centralPane,BoxLayout.Y_AXIS));
         centralPane.setPreferredSize(new Dimension(400,100));
         centralPane.setMaximumSize(new Dimension(400,100));
-        JLabel version = new JLabel("Version 1.3");
+        JLabel version = new JLabel("Version 1.6");
         JLabel useage = new JLabel("To analyze replay(s) click on File->Open Replays (Ctrl+O for short). ");
 		JLabel author = new JLabel("Author: Aaron Elligsen");
 		JLabel thing = new JLabel("\"Supreme Commander\" and \"Supreme Commander Forged Alliance\" are registered");
@@ -126,7 +127,9 @@ public class Main {
         frame.getContentPane().add(centralPane);
         
         
-        
+        /*
+         * This portion is for sending replays directly to the program through the command line
+         */
        
         if(args.length > 0)
         {

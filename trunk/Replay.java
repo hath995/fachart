@@ -5,15 +5,14 @@
  */
 package FAChart;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Vector;
 
 /**
  * The Replay class holds pretty much all the information that is useful when 
- * describing a replay. Half of the data members are filled by the Header class
- * and the other half are filled by the ReplayRead.Analyze function
+ * describing a replay. 
  */
 public class Replay
 {
@@ -21,10 +20,10 @@ public class Replay
 	public String ReplayVersionId;
 	
 	public long GameModsSize;
-	public Hashtable GameMods;
+	public Hashtable<Object, Object> GameMods;
 	
 	public long LuaScenarioInfoSize;
-	public Hashtable LuaScenarioInfo;
+	public Hashtable<Object, Object> LuaScenarioInfo;
 	
 	public long NumSources;
 	public String [][] CommandSource;
@@ -32,15 +31,16 @@ public class Replay
 	public long CheatsEnabled;
 	
 	public long NumArmies;
-	public Hashtable[] Armies;
+    public ArrayList<Hashtable<Object, Object>> Armies;
 	
 	public long RandomSeed;
 	
 	public long GameTime;
         
 	public float[]PlayerGameTimes;
-	public Vector<Point> [] APMS;
-	public Vector<Point> [] MicroAPM;
+
+    public ArrayList<Vector<Point>> APMS;
+    public ArrayList<Vector<Point>> MicroAPM;
 	public Link buildorder;
 	public int [][] ActionsList;
         public int []ActionsTotal;
@@ -57,9 +57,9 @@ public class Replay
 	private int array_index;
         private int csl;
         private int eof;
-        private Hashtable unitTable;
+        private Hashtable<String, String> unitTable;
         
-	public Replay(Hashtable uTable)
+	public Replay(Hashtable<String, String> uTable)
 	{
                 unitTable = uTable;
 		
@@ -85,7 +85,6 @@ public class Replay
 		ActionsList = null;
                 ActionsTotal=null;
 		PlayerGameTimes = null;
-		//EngineerBuildOrder = null;
 		index = 0;
 		array_index=0;
 		
@@ -96,14 +95,13 @@ public class Replay
 	 * Reads directly from replay file when a string is expected and returns 
 	 * all characters until null character is found as a string.
 	 *
-	 * @param areplay The replay file is passed as a FileInputStream 
+	 * @param areplay The replay file is passed as a byte[] 
 	 * @return String 
-	 * @throws IOException
+	 * 
 	 */
 	private String returnNextString(byte[] areplay)
 	{
-		byte [] inputWord = new byte[ONEBYTE];
-		//areplay.read(inputWord);
+
 		String current_option = "";
 		int i = 0;
 		while(areplay[index+i] != 0)
@@ -114,6 +112,19 @@ public class Replay
 		index+=i+1;
 		return current_option;
 	}
+	/**
+	 * The header is one linear portion of the file. There is only one way to
+	 * read it. Therefore instead of offering the various functions individually
+	 * which won't work unless in the right location I have made them private 
+	 * functions of the class and created this public class to handle the
+	 * header section.
+	 *
+	 * IMPORTANT: this function MUST be used before any of the other public Replay functions
+	 * as it sets csl and eof for the use by the other functions.
+	 *
+	 * @param thereplay Takes the replay as byte array
+	 * @param file_size Takes the size of the file which can represent the length of the array
+	 */
 	
         public void analyzeHeader(byte[] thereplay, int file_size)
         {
@@ -137,12 +148,13 @@ public class Replay
 	/**
 	 * parseLuaTable is a short recursive descent parser for serialized LUA tables
 	 * which are similar to things like Hashmaps (Java), or other data structures with
-	 * key value pairs. It rebuilds and returns the key value pair relationship as a Hashmap.. 
+	 * key value pairs. It rebuilds and returns the key value pair relationship as a Hashmap.
+	 * LUA is a weakly typed language.
 	 *
 	 * @param input Passed an array of bytes which is a preloaded section of
-	 * LUA tables from the replay.
+	 * LUA tables from the replay. 
 	 * @return Hashmap containing rebuilt key-value pair data
-	 * @throws IOException
+	 * 
 	 */
 	private Object parseLuaTable(byte [] input)
 	{
@@ -187,7 +199,7 @@ public class Replay
 
 			break;
 		case 4: //LUA_TYPE_TABLE_BEGIN
-			Hashtable tableLevel = new Hashtable();
+			Hashtable<Object, Object> tableLevel = new Hashtable<Object, Object>();
 			while(input[array_index] != 5)
 			{
 				Object key = parseLuaTable(input);
@@ -210,9 +222,9 @@ public class Replay
 	/**
 	 * Reads the replay game patch version and skips past formating characters
 	 * 
-	 * @param thereplay Takes the replay as a FileInputStream 
+	 * @param thereplay Takes the replay as a byte[] 
 	 * @return String containing the game patch version
-	 * @throws IOException
+	 * 
 	 */
 	private void setReplayPatchFileId(byte[] thereplay)
 	{
@@ -225,9 +237,9 @@ public class Replay
 	 * Reads the replay version id and skips past formating characters.
 	 * Specifically, this is the version of the replay file format
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream 
+	 * @param thereplay Takes the replay as a byte[] 
 	 * @return String containing the replay version
-	 * @throws IOException
+	 * 
 	 */
 	private void setReplayVersionId(byte[] thereplay)
 	{
@@ -241,9 +253,9 @@ public class Replay
 	 * before it lists the mod data it declares the size of that section 
 	 * *INCLUDING* the bytes used to declare the size.
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream 
+	 * @param thereplay Takes the replay as a byte[] 
 	 * @return Long containing the size of the game mod serialized table
-	 * @throws IOException
+	 * 
 	 */
 	private void setGameModsSize(byte[] thereplay)
 	{
@@ -260,9 +272,9 @@ public class Replay
 	 * Returns the table as a Hashtable with the proper relationships.
 	 *
 	 * @param long Takes the size of the Game Mod section as set by setGameModsSize
-	 * @param thereplay Takes the replay as a FileInputStream 
+	 * @param thereplay Takes the replay as a byte[] 
 	 * @return Hashtable containing Game Mod data
-	 * @throws IOException
+	 * 
 	 */
 	private void setGameMods(long size, byte[] thereplay)
 	{
@@ -270,8 +282,7 @@ public class Replay
 		for(int i = 0; i < size; i++)
 			inputWord[i] = thereplay[index+i];
 		index+=size;
-		Hashtable gameMods = (Hashtable)parseLuaTable(inputWord);
-                array_index = 0;
+		Hashtable<Object, Object> gameMods = (Hashtable<Object, Object>)parseLuaTable(inputWord);
 		GameMods = gameMods;
 	}
 	
@@ -280,9 +291,9 @@ public class Replay
 	 * before it lists the data it declares the size of that section 
 	 * *INCLUDING* the bytes used to declare the size.
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream 
+	 * @param thereplay Takes the replay as a byte[] 
 	 * @return Long containing the size of the match setting serialized table
-	 * @throws IOException
+	 * 
 	 */
 	private void setLuaScenarioInfoSize(byte[] thereplay)
 	{
@@ -300,9 +311,9 @@ public class Replay
 	 * Returns the table as a Hashtable with the proper relationships.
 	 *
 	 * @param long Takes the size of the LuaScenarioInfo section as set by setLuaScenarioInfo
-	 * @param thereplay Takes the replay as a FileInputStream 
+	 * @param thereplay Takes the replay as a byte[] 
 	 * @return Hashtable containing Game Mod data
-	 * @throws IOException
+	 * 
 	 */
 	private void setLuaScenarioInfo(long size, byte[] thereplay)
 	{
@@ -310,9 +321,9 @@ public class Replay
 		for(int i = 0; i < size; i++)
 			inputWord[i] = thereplay[index+i];
 		index+=size;
-		Hashtable LuaScenarioInfo = (Hashtable)parseLuaTable(inputWord);
-                array_index = 0;
-		this.LuaScenarioInfo = LuaScenarioInfo;
+		Hashtable<Object, Object> LSI = (Hashtable<Object, Object>)parseLuaTable(inputWord);
+        array_index = 0;
+		this.LuaScenarioInfo = LSI;
 	}
 	
 	/**
@@ -320,9 +331,9 @@ public class Replay
 	 * The replay format has a place where it describes the number of Source matching
 	 * pairs to follow
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream 
+	 * @param thereplay Takes the replay as a byte[] 
 	 * @return The number of Sources involved in the replay
-	 * @throws IOException
+	 * 
 	 */
 	private void setNumSources(byte[] thereplay)
 	{
@@ -339,9 +350,9 @@ public class Replay
 	 * In particular the Source arrays contain the Player command id and Player name.
 	 *
 	 * @param numSources the number of Sources as set by setNumSources
-	 * @param thereplay Takes the replay as a FileInputStream
+	 * @param thereplay Takes the replay as a byte[]
 	 * @return 2D String Array with Source command id and player name
-	 * @throws IOException
+	 * 
 	 */
 	private void setCommandSource(long numSources, byte[] thereplay) 
 	{
@@ -365,9 +376,9 @@ public class Replay
 	 * One is in the LuaScenarioInfo as a key-value pair and as a true/false byte.
 	 * This reads that true/false byte.
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream
+	 * @param thereplay Takes the replay as a byte[]
 	 * @return 2D String Array with Source command id and player name
-	 * @throws IOException
+	 * 
 	 */
 	private void setCheatsEnabled(byte[] thereplay)
 	{
@@ -384,18 +395,17 @@ public class Replay
 	 * returns the number of armies.This includes AI players, nuetral, and hostile
 	 * bystanders.
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream
+	 * @param thereplay Takes the replay as a byte[]
 	 * @return long containing the number of armies
-	 * @throws IOException
+	 * 
 	 */
 	private void setNumArmies(byte[] thereplay)
 	{
 		byte[] inputWord = new byte[ONEBYTE];
-		//thereplay.read(inputWord);
 		inputWord[0] = thereplay[index];
 		index+=ONEBYTE;
-		long NumArmies = ReplayReader.unsignedInt(inputWord,0,ONEBYTE);
-		this.NumArmies = NumArmies;
+		long numArmies = ReplayReader.unsignedInt(inputWord,0,ONEBYTE);
+		this.NumArmies = numArmies;
 	}
 	
 	/**
@@ -405,13 +415,17 @@ public class Replay
 	 * bystanders.
 	 *
 	 * @param numArmies The number of Armies set by setNumArmies
-	 * @param thereplay Takes the replay as a FileInputStream
+	 * @param thereplay Takes the replay as a byte[]
 	 * @return long containing the number of armies
-	 * @throws IOException
+	 * 
 	 */
 	private void setArmies(long numArmies, byte[] thereplay)
 	{
-		Hashtable[] player = new Hashtable[(int)numArmies];
+		ArrayList<Hashtable<Object,Object>> player = new ArrayList<Hashtable<Object, Object>>();
+                for(int i=0; i < (int)numArmies; i++)
+                {
+                    player.add(new Hashtable<Object, Object>());
+                }
 		byte[] inputWord;
 		for(int i = 0; i < numArmies; i++)
 		{
@@ -425,13 +439,13 @@ public class Replay
 				inputWord[j] = thereplay[index+j];
 			index+=(int)playerDataSize;
 			array_index=0;
-			player[i] = (Hashtable)parseLuaTable(inputWord);
+			player.set(i, (Hashtable<Object, Object>)parseLuaTable(inputWord));
                         array_index = 0;
 			inputWord = new byte[ONEBYTE];
 			inputWord[0] = thereplay[index];
 			index+=ONEBYTE;
 			long playerCommandSource = ReplayReader.unsignedInt(inputWord,0,ONEBYTE);
-			player[i].put("CommandSource", playerCommandSource);
+			player.get(i).put("CommandSource", playerCommandSource);
 			if(playerCommandSource != 0xff)
 				index+=ONEBYTE;
 
@@ -444,14 +458,13 @@ public class Replay
 	 * is a random integer which is the seed for the random number generator
 	 * used for the games engine.
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream
+	 * @param thereplay Takes the replay as a byte[]
 	 * @return long int containing the random seed
-	 * @throws IOException
+	 * 
 	 */
 	private void setRandomSeed(byte[] thereplay)
 	{
 		byte[] inputWord = new byte[FOURBYTES];
-		//thereplay.read(inputWord);
 		for(int i = 0; i<FOURBYTES; i++)
 			inputWord[i] = thereplay[index+i];
 		index+=FOURBYTES;
@@ -467,9 +480,9 @@ public class Replay
 	 * game long you need to count all of them to determine the game time.
 	 * This means going through the command stream a second time to determine it.
 	 *
-	 * @param thereplay Takes the replay as a FileInputStream
+	 * @param thereplay Takes the replay as a byte[]
 	 * @return The number of ticks counted. Apply a conversion of ticks/10/60 to get game time in minutes
-	 * @throws IOException
+	 * 
 	 */
 	public void setGameTime(byte[] thereplay)
 	{
@@ -504,7 +517,12 @@ public class Replay
                    this.GameTime = 0; 
                 }
 	}
-                
+	
+	/**
+	 * After other variables have been set by the function setGameTime and 
+	 * setPlayerLastTurn this function sets the PlayerGameTimes which essentialy
+	 * is the measure in minutes before each player died or the game ended.
+	 */
         private void setPlayerGameTimes()
         {
             float []gametime = new float[(int)NumSources];
@@ -520,6 +538,14 @@ public class Replay
         
         }
         
+        /**
+         * This sets the data structure APMS and the int array ActionTotal. 
+         * APMS is used for creating both the CPM graph and the Macro/Micro graph
+         * ActionTotal is used primarily for providing the CPM average.
+         *
+         * @param thereplay Takes the replay as a byte array
+         */
+        
         public void setAPMS_actionTotal(byte[] thereplay) 
         {
 
@@ -531,14 +557,14 @@ public class Replay
             int[] actions = new int[(int) NumSources];
             int[] difActions = new int[(int) NumSources];
 
-            Vector[] actions2 = new Vector[(int) NumSources];
+            ArrayList <Vector<Integer>> actions2 = new ArrayList<Vector<Integer>>();
             for (int i = 0; i < (int) NumSources; i++) {
-                actions2[i] = new Vector<Integer>();
+                actions2.add(new Vector<Integer>());
             }
 
             int[] localTotal = new int[(int) NumSources];
-            Vector [] APMS = new Vector[(int)NumSources];
-            for(int i = 0; i<(int)NumSources; i++){ APMS[i] = new Vector<Point>();}
+            ArrayList <Vector<Point>>APM = new ArrayList<Vector<Point>>();
+            for(int i = 0; i<(int)NumSources; i++){ APM.add(new Vector<Point>());}
             long lastTick = 0;
             long tick = 0;
 
@@ -559,15 +585,15 @@ public class Replay
                             {
                                 int deltaActions = actions[i] - difActions[i];
                                 difActions[i] = actions[i];
-                                actions2[i].add(new Integer(deltaActions));
+                                actions2.get(i).add(new Integer(deltaActions));
                                 localTotal[i] += deltaActions;
                                 if (tick > (600 + (cpmTimeIntervalTicks / 2))) 
                                 {
-                                    localTotal[i] -= (Integer) actions2[i].remove(0);
+                                    localTotal[i] -= (Integer) actions2.get(i).remove(0);
                                     if (tick % pointSampleIntervalTicks == 0) {
                                         int floatError = (cpmTimeIntervalTicks / 2);
                                         Point apm = new Point(tick - floatError, localTotal[i] * cpmMultiplier);
-                                        APMS[i].add(apm);
+                                        APM.get(i).add(apm);
                                     }
                                 }
                             }
@@ -616,29 +642,34 @@ public class Replay
                         
                     }
                     
-                    this.APMS = APMS;
+                    this.APMS = APM;
                     this.ActionsTotal = actions;
                     index = csl;
-//                    System.out.println(APMS[0].toString());
                 }else{
                     this.APMS = null;
                     this.ActionsTotal = null;
                 }
         }
         
+        /**
+         * This sets MicroAPM which is a collection used to produce the Micro/Macro
+         * graph section.
+         *
+         * @param thereplay Takes the replay as a byte[]
+         */
         public void setMicroAPM(byte[] thereplay)
         {
             int currentPlayer = 0;
             long currentAction = 0;
 
             int playerturn = 0;
-            Vector [] MAPMS = new Vector[(int)NumSources];
-            for(int i = 0; i<(int)NumSources; i++){ MAPMS[i] = new Vector<Point>();}
+            ArrayList <Vector<Point>> MAPMS = new ArrayList<Vector<Point>>();
+            for(int i = 0; i<(int)NumSources; i++){ MAPMS.add(new Vector<Point>());}
             
             int [] microActions = new int[(int)NumSources];
             int [] microDifActions = new int[(int)NumSources];
-            Vector[] actions2micro = new Vector[(int)NumSources];
-            for(int i = 0; i<(int)NumSources; i++){ actions2micro[i] = new Vector<Integer>();}
+            ArrayList <Vector<Integer>>actions2micro = new ArrayList<Vector<Integer>>();
+            for(int i = 0; i<(int)NumSources; i++){ actions2micro.add( new Vector<Integer>());}
 
             int[] localTotalMicro = new int[(int)NumSources];
 
@@ -662,16 +693,16 @@ public class Replay
                                 {
                                         int microDeltaActions = microActions[i]-microDifActions[i];
                                         microDifActions[i] = microActions[i];
-                                        actions2micro[i].add(new Integer(microDeltaActions));
+                                        actions2micro.get(i).add(new Integer(microDeltaActions));
                                         localTotalMicro[i] += microDeltaActions;
                                         if(tick > (600+(cpmTimeIntervalTicks/2)))
                                         {
-                                                localTotalMicro[i] -= (Integer)actions2micro[i].remove(0);
+                                                localTotalMicro[i] -= (Integer)actions2micro.get(i).remove(0);
                                                 if(tick%pointSampleIntervalTicks==0)
                                                 {
                                                     int floatError =(cpmTimeIntervalTicks/2);
                                                     Point mapm = new Point(tick-floatError, localTotalMicro[i]*cpmMultiplier);
-                                                    MAPMS[i].add(mapm);
+                                                    MAPMS.get(i).add(mapm);
                                                 }
                                         }
                                 }
@@ -745,132 +776,153 @@ public class Replay
         
         }
         
+        /**
+         * Builder orders are an important topic in RTS games and this can extract 
+         * them from the replay for study. 
+         *
+         * @param thereplay Takes the replay as a byte array
+         */
         public void setBuildorder(byte[] thereplay)
         {
-            Hashtable[] engineerBo = new Hashtable[(int)NumSources];
-            for(int i = 0; i<(int)NumSources; i++){engineerBo[i] = new Hashtable<Long, String>();}
+        	ArrayList<Hashtable<Long, String>> engineerBo = new ArrayList<Hashtable<Long, String>>();
 
-            Link buildorder = new Link(CommandSource[0][0]+"'s build order\n", 0, 0,Long.MAX_VALUE,null);
-            for(int i = 1; i < (int)NumSources;i++)
-            {
-                    buildorder.add(new Link(CommandSource[i][0]+"'s build order\n", i, 0,Long.MAX_VALUE,null));
-            }
-            int BOtime = 3600; //only record build order for the first 360 seconds = 3600 ticks
-            
-            int playerturn = 0;
-            long tick = 0;
-            
-            byte[] inputWord = new byte[1];
-            if (csl != 0) {
-                while (index != eof) {
-                    inputWord[0] = thereplay[index];
-                    int message_op = (int) ReplayReader.unsignedInt(inputWord, 0, 1);
-                    index += ONEBYTE;
-                    int message_length = 0;
-                    inputWord = new byte[2];
-                    inputWord[0] = thereplay[index];
-                    inputWord[1] = thereplay[index + 1];
-                    index += TWOBYTES;
-                    message_length = (int) ReplayReader.unsignedInt(inputWord, 0, 2);
-                    switch (message_op) {
-                        case 0:
-                            tick++;
-                            break;
-                        case 1:
-                            playerturn = (int) thereplay[index];
-                            break;
-                        case 12:
-                            int faux_index = 0;
-                            int numUnits = (int) ReplayReader.unsignedInt(thereplay, index, 4);
-                            faux_index += FOURBYTES;
-                            long[] entIds = new long[numUnits];
-                            for (int b = 0; b < numUnits; b++) {
-                                entIds[b] = ReplayReader.unsignedInt(thereplay, index + faux_index, 4);
-                                faux_index += FOURBYTES;
-                            }
-                            long commandId = ReplayReader.unsignedInt(thereplay, index + faux_index, 4);
-                            faux_index += 8; //move past commandID, and a 32 bit -1
+        	for(int i = 0; i<(int)NumSources; i++){engineerBo.add(new Hashtable<Long, String>());}
+        	Link buildOrder;
+        	if (csl != 0) {
+        		if(unitTable != null)
+        		{	
+        			buildOrder = new Link(CommandSource[0][0]+"'s build order\n", 0, 0,Long.MAX_VALUE,null);
+        			for(int i = 1; i < (int)NumSources;i++)
+        			{
+        				buildOrder.add(new Link(CommandSource[i][0]+"'s build order\n", i, 0,Long.MAX_VALUE,null));
+        			}
+        			int BOtime = 3600; //only record build order for the first 360 seconds = 3600 ticks
 
-                            int commandType = (int) ReplayReader.unsignedInt(thereplay, index + faux_index, 1);
-                            faux_index += 5; //move past commandType and a 32 bit -1
+        			int playerturn = 0;
+        			long tick = 0;
 
-                            int STITarget = (int) ReplayReader.unsignedInt(thereplay, index + faux_index, 1);
+        			byte[] inputWord = new byte[1];
 
-                            if (commandType == 7 || commandType == 8 || commandType == 27) {
-                                if (STITarget == 0) {
-                                    faux_index += 6;
-                                } else if (STITarget == 2) {
-                                    faux_index += 1 + 3 * 4 + 1 + 4;//move past stitarget, 3 floats, a zero,a -1 32bit int
+        			while (index != eof) {
+        				inputWord[0] = thereplay[index];
+        				int message_op = (int) ReplayReader.unsignedInt(inputWord, 0, 1);
+        				index += ONEBYTE;
+        				int message_length = 0;
+        				inputWord = new byte[2];
+        				inputWord[0] = thereplay[index];
+        				inputWord[1] = thereplay[index + 1];
+        				index += TWOBYTES;
+        				message_length = (int) ReplayReader.unsignedInt(inputWord, 0, 2);
+        				switch (message_op) {
+        				case 0:
+        					tick++;
+        					break;
+        				case 1:
+        					playerturn = (int) thereplay[index];
+        					break;
+        				case 12:
+        					int faux_index = 0;
+        					int numUnits = (int) ReplayReader.unsignedInt(thereplay, index, 4);
+        					faux_index += FOURBYTES;
+        					long[] entIds = new long[numUnits];
+        					for (int b = 0; b < numUnits; b++) {
+        						entIds[b] = ReplayReader.unsignedInt(thereplay, index + faux_index, 4);
+        						faux_index += FOURBYTES;
+        					}
+        					long commandId = ReplayReader.unsignedInt(thereplay, index + faux_index, 4);
+        					faux_index += 8; //move past commandID, and a 32 bit -1
 
-                                }
+        					int commandType = (int) ReplayReader.unsignedInt(thereplay, index + faux_index, 1);
+        					faux_index += 5; //move past commandType and a 32 bit -1
 
-                                char[] unitBluePrint = new char[7];
-                                for (int i = 0; i < 7; i++) {
-                                    unitBluePrint[i] = (char) ReplayReader.unsignedInt(thereplay, index + faux_index + i, 1);
-                                }
-                                String unitBP = new String(unitBluePrint);
-                                faux_index += 7; //skip the blueprint
+        					int STITarget = (int) ReplayReader.unsignedInt(thereplay, index + faux_index, 1);
 
-                                String workers = "";
-                                if (commandType == 8) {
-                                    workers = " built by ";
-                                    for (int i = 0; i < numUnits; i++) {
-                                        if (engineerBo[playerturn].containsKey(entIds[i])) {
-                                            workers += (String) engineerBo[playerturn].get(entIds[i]) + " ";
-                                        } else {
-                                            if (engineerBo[playerturn].size() == 0) {
-                                                engineerBo[playerturn].put(entIds[i], CommandSource[playerturn][0] + "'s ACU");
-                                                workers += (String) engineerBo[playerturn].get(entIds[i]) + " ";
-                                            } else {
-                                                engineerBo[playerturn].put(entIds[i], "Engineer " + engineerBo[playerturn].size());
-                                                workers += (String) engineerBo[playerturn].get(entIds[i]) + " ";
-                                            }
-                                        }
-                                    }
-                                }
-                                if (tick <= BOtime) {
-                                   
-                                    buildorder.add(new Link(unitTable.get(unitBP) + workers, playerturn, tick, commandId, entIds));
-                                }
-                            }
+        					if (commandType == 7 || commandType == 8 || commandType == 27) {
+        						if (STITarget == 0) {
+        							faux_index += 6;
+        						} else if (STITarget == 2) {
+        							faux_index += 1 + 3 * 4 + 1 + 4;//move past stitarget, 3 floats, a zero,a -1 32bit int
 
-                            if (commandType == 19) {
-                                String workers = "";
-                                for (int i = 0; i < numUnits; i++) {
-                                    if (engineerBo[playerturn].containsKey(entIds[i])) {
-                                        workers += (String) engineerBo[playerturn].get(entIds[i]) + " ";
-                                    } else {
-                                        if (engineerBo[playerturn].size() == 0) {
-                                            engineerBo[playerturn].put(entIds[i], CommandSource[playerturn][0] + "'s ACU");
-                                            workers += (String) engineerBo[playerturn].get(entIds[i]) + " ";
-                                        } else {
-                                            engineerBo[playerturn].put(entIds[i], "Engineer " + engineerBo[playerturn].size());
-                                            workers += (String) engineerBo[playerturn].get(entIds[i]) + " ";
-                                        }
-                                    }
-                                }
-                                if (tick <= BOtime) {
-                                    buildorder.add(new Link("Reclaiming by " + workers, playerturn, tick, commandId, entIds));
-                                }
+        						}
 
-                            }
-                            break;
-                    }
-                    index += message_length - 3; //skip all the data we don't need to look at
+        						char[] unitBluePrint = new char[7];
+        						for (int i = 0; i < 7; i++) {
+        							unitBluePrint[i] = (char) ReplayReader.unsignedInt(thereplay, index + faux_index + i, 1);
+        						}
+        						String unitBP = new String(unitBluePrint);
+        						faux_index += 7; //skip the blueprint
 
-                    inputWord = new byte[1];
+        						String workers = "";
+        						if (commandType == 8) {
+        							workers = " built by ";
+        							for (int i = 0; i < numUnits; i++) {
+        								if (engineerBo.get(playerturn).containsKey(entIds[i])) {
+        									workers += (String) engineerBo.get(playerturn).get(entIds[i]) + " ";
+        								} else {
+        									if (engineerBo.get(playerturn).size() == 0) {
+        										engineerBo.get(playerturn).put(entIds[i], CommandSource[playerturn][0] + "'s ACU");
+        										workers += (String) engineerBo.get(playerturn).get(entIds[i]) + " ";
+        									} else {
+        										engineerBo.get(playerturn).put(entIds[i], "Engineer " + engineerBo.get(playerturn).size());
+        										workers += (String) engineerBo.get(playerturn).get(entIds[i]) + " ";
+        									}
+        								}
+        							}
+        						}
+        						if (tick <= BOtime) {
 
-                }
-                index = csl;
-                this.buildorder = buildorder;
-            } else {
-                this.buildorder = null;
+        							buildOrder.add(new Link(unitTable.get(unitBP) + workers, playerturn, tick, commandId, entIds));
+        						}
+        					}
 
-            }
+        					if (commandType == 19) {
+        						String workers = "";
+        						for (int i = 0; i < numUnits; i++) {
+        							if (engineerBo.get(playerturn).containsKey(entIds[i])) {
+        								workers += (String) engineerBo.get(playerturn).get(entIds[i]) + " ";
+        							} else {
+        								if (engineerBo.get(playerturn).size() == 0) {
+        									engineerBo.get(playerturn).put(entIds[i], CommandSource[playerturn][0] + "'s ACU");
+        									workers += (String) engineerBo.get(playerturn).get(entIds[i]) + " ";
+        								} else {
+        									engineerBo.get(playerturn).put(entIds[i], "Engineer " + engineerBo.get(playerturn).size());
+        									workers += (String) engineerBo.get(playerturn).get(entIds[i]) + " ";
+        								}
+        							}
+        						}
+        						if (tick <= BOtime) {
+        							buildOrder.add(new Link("Reclaiming by " + workers, playerturn, tick, commandId, entIds));
+        						}
 
-            
+        					}
+        					break;
+        				}
+        				index += message_length - 3; //skip all the data we don't need to look at
+
+        				inputWord = new byte[1];
+
+        			}
+        		}else{
+        			buildOrder = new Link("unitDB not found. This section will not function.", 0, 0,Long.MAX_VALUE,null);
+        			System.err.println("bluh");
+        		}
+        		index = csl;
+        		this.buildorder = buildOrder;
+        	}else{
+        		this.buildorder = null;
+        		System.err.println("arg");
+        	}
+
+
         }
-	
+        
+        /**
+         * This function sets the array ActionList which is an array representing 
+         * the class of actions used for all in game actions. This is used for the
+         * action distribution section.
+         *
+         * @param thereplay
+         */
         public void setActionList(byte[] thereplay)
         {	
             int [][] actionsList = new int[(int)NumSources][40];
@@ -925,26 +977,28 @@ public class Replay
                     }
                     this.ActionsList = actionsList;
                     index = csl;
-//                    for(int i=0; i<40;i++)
-//                    {
-//                        System.out.println("["+i+"] "+actionsList[3][i]);
-//                    }
+
                 }else{
                    this.ActionsList = null; 
                 }
         
         }
         
+        /**
+         * This function provides the last turn a player gave an action. This is
+         * an approximation for the time of their death or game end.
+         *
+         * @param thereplay Takes the replay as byte array
+         */
         private void setPlayerLastTurn(byte[] thereplay)
-        {//	public long[] PlayerLastTurn;
+        {
             long playerLastTurn[] = new long[(int)NumSources];
             
             int currentPlayer = 0;
             long currentAction = 0;
             
             int playerturn = 0;
-            
-            long lastTick = 0;
+           
             long tick = 0;
             
             byte[] inputWord = new byte[1];
@@ -994,8 +1048,7 @@ public class Replay
                     }
                     this.PlayerLastTurn = playerLastTurn;
                     index = csl;
-//                    for(int i= 0; i < NumSources; i++)
-//                        System.out.println(PlayerLastTurn[i]);
+
                 }else{
                    this.GameTime = 0; 
                 }

@@ -10,8 +10,8 @@ import java.io.File;
 import javax.swing.filechooser.FileFilter;
 
 /**
- *
- * @author admin
+ * This class ensures that build orders are exported in the .txt format
+ * 
  */
 public class TextFilter extends FileFilter {
     
