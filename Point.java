@@ -6,7 +6,11 @@
 
 package FAChart;
 
-
+/**
+ * This point class is a point made of a long and an int. The java library
+ * does not have a matching point class for these types. It does have classes for
+ * floats and doubles, but I'd rather not have to cast back down from those types.
+ */
 
 public class Point
 {

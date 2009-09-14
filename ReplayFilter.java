@@ -10,8 +10,8 @@ import java.io.File;
 import javax.swing.filechooser.FileFilter;
 
 /**
- *
- * @author admin
+ * This class ensures only Supreme Commander Forged Alliance replays are loaded.
+ * 
  */
 public class ReplayFilter extends FileFilter {
     

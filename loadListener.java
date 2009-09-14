@@ -24,8 +24,8 @@ import javax.swing.JLabel;
 
 
 /**
- *
- * @author admin
+ * This class is a listner for the GUI when a user choosed to open a replay for
+ * analysis
  */
 public class loadListener implements ActionListener {
     JFrame Parent;
@@ -76,7 +76,6 @@ public class loadListener implements ActionListener {
 						try
 						{
 							int fileSize = thereplay.available();
-                                                        System.out.println(fileSize);
 							byte[] replaybytes = new byte[fileSize];
 							thereplay.read(replaybytes);
 						    try
